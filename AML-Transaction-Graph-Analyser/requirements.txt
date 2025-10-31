@@ -1,0 +1,10 @@
+numpy
+pandas
+matplotlib
+networkx>=3.0
+pyvis
+powerlaw
+faker
+torch
+torch_geometric
+scikit-learn

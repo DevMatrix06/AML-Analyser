@@ -1,0 +1,321 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script>function neighbourhoodHighlight(params) {
+  // console.log("in nieghbourhoodhighlight");
+  allNodes = nodes.get({ returnType: "Object" });
+  // originalNodes = JSON.parse(JSON.stringify(allNodes));
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    highlightActive = true;
+    var i, j;
+    var selectedNode = params.nodes[0];
+    var degrees = 2;
+
+    // mark all nodes as hard to read.
+    for (let nodeId in allNodes) {
+      // nodeColors[nodeId] = allNodes[nodeId].color;
+      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
+      if (allNodes[nodeId].hiddenLabel === undefined) {
+        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+    var connectedNodes = network.getConnectedNodes(selectedNode);
+    var allConnectedNodes = [];
+
+    // get the second degree nodes
+    for (i = 1; i < degrees; i++) {
+      for (j = 0; j < connectedNodes.length; j++) {
+        allConnectedNodes = allConnectedNodes.concat(
+          network.getConnectedNodes(connectedNodes[j])
+        );
+      }
+    }
+
+    // all second degree nodes get a different color and their label back
+    for (i = 0; i < allConnectedNodes.length; i++) {
+      // allNodes[allConnectedNodes[i]].color = "pink";
+      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
+      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[allConnectedNodes[i]].label =
+          allNodes[allConnectedNodes[i]].hiddenLabel;
+        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // all first degree nodes get their own color and their label back
+    for (i = 0; i < connectedNodes.length; i++) {
+      // allNodes[connectedNodes[i]].color = undefined;
+      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
+      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
+        allNodes[connectedNodes[i]].label =
+          allNodes[connectedNodes[i]].hiddenLabel;
+        allNodes[connectedNodes[i]].hiddenLabel = undefined;
+      }
+    }
+
+    // the main node gets its own color and its label back.
+    // allNodes[selectedNode].color = undefined;
+    allNodes[selectedNode].color = nodeColors[selectedNode];
+    if (allNodes[selectedNode].hiddenLabel !== undefined) {
+      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
+      allNodes[selectedNode].hiddenLabel = undefined;
+    }
+  } else if (highlightActive === true) {
+    // console.log("highlightActive was true");
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      // allNodes[nodeId].color = "purple";
+      allNodes[nodeId].color = nodeColors[nodeId];
+      // delete allNodes[nodeId].color;
+      if (allNodes[nodeId].hiddenLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
+        allNodes[nodeId].hiddenLabel = undefined;
+      }
+    }
+    highlightActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    // console.log("Nothing was selected");
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        // console.log(allNodes[nodeId]);
+        // allNodes[nodeId].color = {};
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function filterHighlight(params) {
+  allNodes = nodes.get({ returnType: "Object" });
+  // if something is selected:
+  if (params.nodes.length > 0) {
+    filterActive = true;
+    let selectedNodes = params.nodes;
+
+    // hiding all nodes and saving the label
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = true;
+      if (allNodes[nodeId].savedLabel === undefined) {
+        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
+        allNodes[nodeId].label = undefined;
+      }
+    }
+
+    for (let i=0; i < selectedNodes.length; i++) {
+      allNodes[selectedNodes[i]].hidden = false;
+      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
+        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
+        allNodes[selectedNodes[i]].savedLabel = undefined;
+      }
+    }
+
+  } else if (filterActive === true) {
+    // reset all nodes
+    for (let nodeId in allNodes) {
+      allNodes[nodeId].hidden = false;
+      if (allNodes[nodeId].savedLabel !== undefined) {
+        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
+        allNodes[nodeId].savedLabel = undefined;
+      }
+    }
+    filterActive = false;
+  }
+
+  // transform the object into an array
+  var updateArray = [];
+  if (params.nodes.length > 0) {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  } else {
+    for (let nodeId in allNodes) {
+      if (allNodes.hasOwnProperty(nodeId)) {
+        updateArray.push(allNodes[nodeId]);
+      }
+    }
+    nodes.update(updateArray);
+  }
+}
+
+function selectNode(nodes) {
+  network.selectNodes(nodes);
+  neighbourhoodHighlight({ nodes: nodes });
+  return nodes;
+}
+
+function selectNodes(nodes) {
+  network.selectNodes(nodes);
+  filterHighlight({nodes: nodes});
+  return nodes;
+}
+
+function highlightFilter(filter) {
+  let selectedNodes = []
+  let selectedProp = filter['property']
+  if (filter['item'] === 'node') {
+    let allNodes = nodes.get({ returnType: "Object" });
+    for (let nodeId in allNodes) {
+      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
+        selectedNodes.push(nodeId)
+      }
+    }
+  }
+  else if (filter['item'] === 'edge'){
+    let allEdges = edges.get({returnType: 'object'});
+    // check if the selected property exists for selected edge and select the nodes connected to the edge
+    for (let edge in allEdges) {
+      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
+        selectedNodes.push(allEdges[edge]['from'])
+        selectedNodes.push(allEdges[edge]['to'])
+      }
+    }
+  }
+  selectNodes(selectedNodes)
+}</script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+            
+            
+            
+            
+            
+
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 600px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "7494", "label": "7494", "shape": "dot", "title": "Account ID: 7494\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c1003e", "border": "#000000"}, "id": "8234", "label": "8234", "shape": "dot", "title": "Account ID: 8234\u003cbr\u003eMax Edge Score: 0.5028\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "5103", "label": "5103", "shape": "dot", "title": "Account ID: 5103\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "5763", "label": "5763", "shape": "dot", "title": "Account ID: 5763\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "2166", "label": "2166", "shape": "dot", "title": "Account ID: 2166\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "4913", "label": "4913", "shape": "dot", "title": "Account ID: 4913\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8742", "label": "8742", "shape": "dot", "title": "Account ID: 8742\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8694", "label": "8694", "shape": "dot", "title": "Account ID: 8694\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8085", "label": "8085", "shape": "dot", "title": "Account ID: 8085\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c1003e", "border": "#000000"}, "id": "9894", "label": "9894", "shape": "dot", "title": "Account ID: 9894\u003cbr\u003eMax Edge Score: 0.5028\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9036", "label": "9036", "shape": "dot", "title": "Account ID: 9036\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#bc0043", "border": "#000000"}, "id": "3140", "label": "3140", "shape": "dot", "title": "Account ID: 3140\u003cbr\u003eMax Edge Score: 0.4910\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8078", "label": "8078", "shape": "dot", "title": "Account ID: 8078\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9576", "label": "9576", "shape": "dot", "title": "Account ID: 9576\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "6011", "label": "6011", "shape": "dot", "title": "Account ID: 6011\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9546", "label": "9546", "shape": "dot", "title": "Account ID: 9546\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9844", "label": "9844", "shape": "dot", "title": "Account ID: 9844\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8731", "label": "8731", "shape": "dot", "title": "Account ID: 8731\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c1003e", "border": "#000000"}, "id": "9996", "label": "9996", "shape": "dot", "title": "Account ID: 9996\u003cbr\u003eMax Edge Score: 0.5028\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9787", "label": "9787", "shape": "dot", "title": "Account ID: 9787\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8281", "label": "8281", "shape": "dot", "title": "Account ID: 8281\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "5090", "label": "5090", "shape": "dot", "title": "Account ID: 5090\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "1299", "label": "1299", "shape": "dot", "title": "Account ID: 1299\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "8999", "label": "8999", "shape": "dot", "title": "Account ID: 8999\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "9769", "label": "9769", "shape": "dot", "title": "Account ID: 9769\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}, {"borderWidth": 1, "color": {"background": "#c0003f", "border": "#000000"}, "id": "5339", "label": "5339", "shape": "dot", "title": "Account ID: 5339\u003cbr\u003eMax Edge Score: 0.5025\u003cbr\u003eKnown Fraud: No"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#c0003f", "from": "7494", "title": "Score: 0.5025\u003cbr\u003eAmount: 568.53\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603600000001}, {"arrows": "to", "color": "#c1003e", "from": "8234", "title": "Score: 0.5028\u003cbr\u003eAmount: 1,885,792.25\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9894", "value": 5.027897}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 1,885,992.12\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "7494", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 2,800,175.25\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9576", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 6,499,013.00\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "6011", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 15,736.75\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9546", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 16,203.92\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9844", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 28,239.93\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8731", "value": 5.024603600000001}, {"arrows": "to", "color": "#c1003e", "from": "8234", "title": "Score: 0.5028\u003cbr\u003eAmount: 60,675.32\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9996", "value": 5.0276226}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 94,320.27\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9787", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 113,723.80\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8281", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 420,937.43\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "5090", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 481,273.68\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "1299", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 634,665.06\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8999", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 634,711.56\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "9769", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8234", "title": "Score: 0.5025\u003cbr\u003eAmount: 690,187.37\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "5339", "value": 5.024603600000001}, {"arrows": "to", "color": "#c0003f", "from": "5103", "title": "Score: 0.5025\u003cbr\u003eAmount: 19.89\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "5763", "title": "Score: 0.5025\u003cbr\u003eAmount: 152.25\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "2166", "title": "Score: 0.5025\u003cbr\u003eAmount: 22.64\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "4913", "title": "Score: 0.5025\u003cbr\u003eAmount: 350.39\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8742", "title": "Score: 0.5025\u003cbr\u003eAmount: 176.66\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8694", "title": "Score: 0.5025\u003cbr\u003eAmount: 185.00\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "8085", "title": "Score: 0.5025\u003cbr\u003eAmount: 8.02\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}, {"arrows": "to", "color": "#c0003f", "from": "9036", "title": "Score: 0.5025\u003cbr\u003eAmount: 5.78\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603600000001}, {"arrows": "to", "color": "#bc0043", "from": "3140", "title": "Score: 0.4910\u003cbr\u003eAmount: 21.42\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 4.91007}, {"arrows": "to", "color": "#c0003f", "from": "8078", "title": "Score: 0.5025\u003cbr\u003eAmount: 9.97\u003cbr\u003eType: TRANSFER\u003cbr\u003eKnown Fraud: No", "to": "8234", "value": 5.024603}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"physics": {"barnesHut": {"centralGravity": 0.3, "springLength": 100, "springConstant": 0.04, "damping": 0.9}, "minVelocity": 0.75}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
