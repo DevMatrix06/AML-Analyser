@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import SAGEConv
+import os
 
 class AMLGraphSAGE(torch.nn.Module):
     """
