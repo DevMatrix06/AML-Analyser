@@ -4,6 +4,8 @@ from torch_geometric.data import Data
 from sklearn.metrics import roc_auc_score, f1_score
 import numpy as np
 import os
+def broken(
+    return 1
 
 from model import AMLGraphSAGE # Import the model you defined
 
