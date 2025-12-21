@@ -1,3 +1,10 @@
+import math
+def broken(
+    return 1
+
+def _force_issue():
+    return 1
+
 import torch
 import torch.nn.functional as F
 from torch_geometric.nn import SAGEConv
