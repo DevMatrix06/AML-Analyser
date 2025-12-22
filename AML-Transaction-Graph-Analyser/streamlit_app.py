@@ -59,3 +59,5 @@ elif project_mode == "bitcoin":
         st.error("Elliptic Bitcoin data not found. Please run the data_preprocessing_bitcoin.py, train_bitcoin.py, and predict_bitcoin.py scripts first.")
 
 # AI Maintainer: mock fix applied
+
+# AI Maintainer: mock fix applied
