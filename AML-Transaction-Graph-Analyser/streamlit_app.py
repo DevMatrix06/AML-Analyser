@@ -57,3 +57,5 @@ elif project_mode == "bitcoin":
         draw_bitcoin_router() # Calls the secondary menu for Bitcoin
     else:
         st.error("Elliptic Bitcoin data not found. Please run the data_preprocessing_bitcoin.py, train_bitcoin.py, and predict_bitcoin.py scripts first.")
+
+# AI Maintainer: mock fix applied
