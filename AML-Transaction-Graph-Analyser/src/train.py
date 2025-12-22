@@ -3,8 +3,6 @@ import torch.nn.functional as F
 from torch_geometric.data import Data
 from sklearn.metrics import roc_auc_score, f1_score
 import numpy as np
-..
-deaefadfegvd ;;;;
 from model import AMLGraphSAGE # Import the model you defined
 
 import torch_geometric.data.data
