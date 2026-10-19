@@ -1,0 +1,2 @@
+# Generated network visualisations are output, not source code (keeps the repo language as Python)
+*.html linguist-generated=true

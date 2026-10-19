@@ -8,3 +8,4 @@ faker
 torch
 torch_geometric
 scikit-learn
+streamlit
