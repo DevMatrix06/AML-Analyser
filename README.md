@@ -53,7 +53,7 @@ python src/predict_bitcoin.py
 
 ## Results, honestly
 - **AMLSim:** the best validation ROC-AUC recorded for the model is **0.5649**, on data where only 0.13% of transactions are fraud. That is only slightly better than random. The base model learns from the graph structure alone: it uses a placeholder node feature, and the GraphSAGE layers do not take the edge attributes (amount, type) as input. It is a working end-to-end pipeline and a baseline, not a finished detector.
-- **Elliptic:** `python src/train_bitcoin.py` prints the test F1 score for the model. This repository does not store that number.
+- **Elliptic:** the test F1 score recorded for the model is **0.85** (0.8497, used by the dashboard), measured on the labelled Elliptic transactions. `python src/train_bitcoin.py` prints the score when you retrain. There is no non-graph baseline in this repository yet, so it does not show how much the graph itself adds.
 
 ## Ideas to improve it
 - Feed edge features (amount, time) into the model, for example with an edge-aware convolution, so it can use more than the topology.
